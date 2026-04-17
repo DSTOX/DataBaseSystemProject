@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Campus Recruiting & Finance Event Management</h1>
+<div class="stats">
+    <div class="stat-card"><h2>{{ event_count }}</h2><p>Events</p></div>
+    <div class="stat-card"><h2>{{ student_count }}</h2><p>Students</p></div>
+    <div class="stat-card"><h2>{{ rsvp_count }}</h2><p>Confirmed RSVPs</p></div>
+    <div class="stat-card"><h2>{{ waitlist_count }}</h2><p>On Waitlist</p></div>
+</div>
+<div class="quick-links">
+    <a class="btn" href="{{ url_for('new_event') }}">+ New Event</a>
+    <a class="btn" href="{{ url_for('new_student') }}">+ New Student</a>
+    <a class="btn" href="{{ url_for('new_company') }}">+ New Company</a>
+    <a class="btn" href="{{ url_for('reports') }}">View Reports</a>
+</div>
+{% endblock %}

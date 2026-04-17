@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ 'Edit Company' if company else 'New Company' }}</h1>
+<form method="POST">
+    <label>Name<br><input name="name" value="{{ company.name if company else '' }}" required></label>
+    <label>Industry<br><input name="industry" value="{{ company.industry if company else '' }}"></label>
+    <label>Website<br><input name="website" value="{{ company.website if company else '' }}"></label>
+    <button type="submit" class="btn">{{ 'Update' if company else 'Add Company' }}</button>
+    <a href="{{ url_for('companies') }}">Cancel</a>
+</form>
+{% endblock %}

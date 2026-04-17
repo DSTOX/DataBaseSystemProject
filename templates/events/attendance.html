@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Attendance — {{ event.title }}</h1>
+<table>
+    <thead>
+        <tr><th>Name</th><th>Email</th><th>Attended?</th><th>Check-in Time</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+    {% for a in attendees %}
+        <tr>
+            <td>{{ a.full_name }}</td>
+            <td>{{ a.email }}</td>
+            <td>{{ 'Yes' if a.attended_flag else 'No' }}</td>
+            <td>{{ a.checkin_time.strftime('%H:%M') if a.checkin_time else '—' }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('attendance', event_id=event.event_id) }}">
+                    <input type="hidden" name="student_id" value="{{ a.student_id }}">
+                    <input type="checkbox" name="attended_flag" {{ 'checked' if a.attended_flag }}> Attended
+                    <input type="datetime-local" name="checkin_time"
+                           value="{{ a.checkin_time.strftime('%Y-%m-%dT%H:%M') if a.checkin_time else '' }}">
+                    <button type="submit" class="btn">Save</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<a href="{{ url_for('event_detail', event_id=event.event_id) }}">← Back to Event</a>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ 'Edit Student' if student else 'New Student' }}</h1>
+<form method="POST">
+    <label>Full Name<br><input name="full_name" value="{{ student.full_name if student else '' }}" required></label>
+    <label>Email<br><input type="email" name="email" value="{{ student.email if student else '' }}" required></label>
+    <label>Major<br><input name="major" value="{{ student.major if student else '' }}"></label>
+    <label>Graduation Year<br><input type="number" name="graduation_year" value="{{ student.graduation_year if student else '' }}"></label>
+    <button type="submit" class="btn">{{ 'Update' if student else 'Add Student' }}</button>
+    <a href="{{ url_for('students') }}">Cancel</a>
+</form>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>All Follow-Up Tasks</h1>
+<p>To add a follow-up, go to an event's detail page.</p>
+<table>
+    <thead>
+        <tr><th>Student</th><th>Event</th><th>Type</th><th>Status</th><th>Notes</th><th>Update</th><th>Delete</th></tr>
+    </thead>
+    <tbody>
+    {% for f in followups %}
+        <tr>
+            <td>{{ f.student_name }}</td>
+            <td>{{ f.event_title }}</td>
+            <td>{{ f.followup_type }}</td>
+            <td>{{ f.status }}</td>
+            <td>{{ f.notes or '—' }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('update_followup', followup_id=f.followup_id) }}" style="display:flex; gap:0.25rem;">
+                    <select name="status">
+                        {% for s in ['pending', 'completed', 'cancelled'] %}
+                            <option value="{{ s }}" {{ 'selected' if f.status == s }}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                    <input name="notes" value="{{ f.notes or '' }}" style="max-width:150px">
+                    <button type="submit" class="btn">Save</button>
+                </form>
+            </td>
+            <td>
+                <form method="POST" action="{{ url_for('delete_followup', followup_id=f.followup_id) }}">
+                    <button type="submit" onclick="return confirm('Delete this follow-up?')">Delete</button>
+                </form>
+            </td>
+        </tr>
+    {% else %}
+        <tr><td colspan="7">No follow-up tasks yet.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

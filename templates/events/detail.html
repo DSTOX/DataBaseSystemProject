@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ event.title }}</h1>
+<p>
+    <strong>Type:</strong> {{ event.event_type }} &nbsp;|&nbsp;
+    <strong>Date:</strong> {{ event.event_date }} &nbsp;|&nbsp;
+    <strong>Location:</strong> {{ event.location or '—' }}
+</p>
+<p>
+    <strong>Company:</strong> {{ event.company_name or '—' }} &nbsp;|&nbsp;
+    <strong>Organizer:</strong> {{ event.organizer_name or '—' }} &nbsp;|&nbsp;
+    <strong>Capacity:</strong> {{ event.capacity }}
+</p>
+<p>{{ event.description }}</p>
+<div style="margin: 1rem 0;">
+    <a class="btn" href="{{ url_for('edit_event', event_id=event.event_id) }}">Edit Event</a>
+    <form method="POST" action="{{ url_for('delete_event', event_id=event.event_id) }}" style="display:inline">
+        <button type="submit" class="btn-danger" onclick="return confirm('Delete this event?')">Delete Event</button>
+    </form>
+</div>
+
+<hr>
+
+<!-- RSVP a student -->
+<h2>RSVP a Student</h2>
+<form method="POST" action="{{ url_for('rsvp', event_id=event.event_id) }}" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+    <select name="student_id" required>
+        <option value="">— Select a student —</option>
+        {% for s in all_students %}
+            <option value="{{ s.student_id }}">{{ s.full_name }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn">Submit RSVP</button>
+</form>
+
+<!-- Confirmed RSVPs -->
+<h2>Confirmed RSVPs ({{ rsvps|length }} / {{ event.capacity }})</h2>
+{% if rsvps %}
+<table>
+    <thead>
+        <tr><th>Name</th><th>Email</th><th>Major</th><th>RSVPed At</th><th>Cancel</th></tr>
+    </thead>
+    <tbody>
+    {% for r in rsvps %}
+        <tr>
+            <td>{{ r.full_name }}</td>
+            <td>{{ r.email }}</td>
+            <td>{{ r.major }}</td>
+            <td>{{ r.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('cancel_rsvp', event_id=event.event_id, student_id=r.student_id) }}" style="display:inline">
+                    <button type="submit" onclick="return confirm('Cancel RSVP? Next waitlisted student will be promoted.')">Cancel</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No confirmed RSVPs yet.</p>
+{% endif %}
+
+<!-- Waitlist -->
+<h2>Waitlist ({{ waitlist|length }})</h2>
+{% if waitlist %}
+<table>
+    <thead>
+        <tr><th>Position</th><th>Name</th><th>Email</th><th>Joined At</th></tr>
+    </thead>
+    <tbody>
+    {% for w in waitlist %}
+        <tr>
+            <td>#{{ w.waitlist_position }}</td>
+            <td>{{ w.full_name }}</td>
+            <td>{{ w.email }}</td>
+            <td>{{ w.joined_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No one on the waitlist.</p>
+{% endif %}
+
+<hr>
+
+<!-- Attendance -->
+<h2>Mark Attendance</h2>
+{% if rsvps %}
+<form method="POST" action="{{ url_for('mark_attendance', event_id=event.event_id) }}" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; align-items:center;">
+    <select name="student_id" required>
+        <option value="">— Select a student —</option>
+        {% for r in rsvps %}
+            <option value="{{ r.student_id }}">{{ r.full_name }}</option>
+        {% endfor %}
+    </select>
+    <label style="font-weight:normal; display:inline-flex; align-items:center; gap:0.25rem;">
+        <input type="checkbox" name="attended_flag"> Attended
+    </label>
+    <input type="datetime-local" name="checkin_time">
+    <button type="submit" class="btn">Save</button>
+</form>
+{% else %}
+<p>No confirmed RSVPs to mark attendance for.</p>
+{% endif %}
+
+{% if attendance_summary and (attendance_summary.attended or attendance_summary.absent) %}
+<p>Attended: <strong>{{ attendance_summary.attended }}</strong> &nbsp;|&nbsp; Absent: <strong>{{ attendance_summary.absent }}</strong></p>
+{% endif %}
+
+<hr>
+
+<!-- Follow-Ups -->
+<h2>Follow-Up Tasks</h2>
+<form method="POST" action="{{ url_for('new_followup') }}" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; align-items:center;">
+    <input type="hidden" name="event_id" value="{{ event.event_id }}">
+    <select name="student_id" required>
+        <option value="">— Student —</option>
+        {% for r in rsvps %}
+            <option value="{{ r.student_id }}">{{ r.full_name }}</option>
+        {% endfor %}
+    </select>
+    <select name="followup_type">
+        <option value="thank_you">Thank You</option>
+        <option value="application">Application</option>
+        <option value="interview">Interview</option>
+        <option value="other">Other</option>
+    </select>
+    <input name="notes" placeholder="Notes (optional)">
+    <button type="submit" class="btn">Add Follow-Up</button>
+</form>
+
+{% if followups %}
+<table>
+    <thead>
+        <tr><th>Student</th><th>Type</th><th>Status</th><th>Notes</th><th>Delete</th></tr>
+    </thead>
+    <tbody>
+    {% for f in followups %}
+        <tr>
+            <td>{{ f.student_name }}</td>
+            <td>{{ f.followup_type }}</td>
+            <td>{{ f.status }}</td>
+            <td>{{ f.notes or '—' }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('delete_followup', followup_id=f.followup_id) }}">
+                    <button type="submit" onclick="return confirm('Delete?')">Delete</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No follow-up tasks yet.</p>
+{% endif %}
+
+{% endblock %}

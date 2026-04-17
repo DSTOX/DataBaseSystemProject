@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ 'Edit Event' if event else 'New Event' }}</h1>
+<form method="POST">
+    <label>Title<br><input name="title" value="{{ event.title if event else '' }}" required></label>
+    <label>Type<br>
+        <select name="event_type">
+            {% for t in ['info_session','panel','networking','workshop'] %}
+                <option value="{{ t }}" {{ 'selected' if event and event.event_type == t else '' }}>{{ t }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Date<br><input type="date" name="event_date" value="{{ event.event_date if event else '' }}" required></label>
+    <label>Location<br><input name="location" value="{{ event.location if event else '' }}"></label>
+    <label>Capacity<br><input type="number" name="capacity" min="1" value="{{ event.capacity if event else '' }}" required></label>
+    <label>Description<br><textarea name="description">{{ event.description if event else '' }}</textarea></label>
+    <label>Company<br>
+        <select name="company_id">
+            <option value="">— None —</option>
+            {% for c in companies %}
+                <option value="{{ c.company_id }}" {{ 'selected' if event and event.company_id == c.company_id else '' }}>{{ c.name }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Organizer<br>
+        <select name="organizer_id">
+            <option value="">— None —</option>
+            {% for o in organizers %}
+                <option value="{{ o.organizer_id }}" {{ 'selected' if event and event.organizer_id == o.organizer_id else '' }}>{{ o.full_name }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <button type="submit" class="btn">{{ 'Update' if event else 'Create' }}</button>
+    <a href="{{ url_for('events') }}">Cancel</a>
+</form>
+{% endblock %}

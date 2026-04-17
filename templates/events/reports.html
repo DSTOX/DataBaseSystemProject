@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Reports</h1>
+
+<h2>Attendance by Company</h2>
+<table>
+    <thead><tr><th>Company</th><th>Attended</th><th>Absent</th></tr></thead>
+    <tbody>
+    {% for row in attendance_by_company %}
+        <tr>
+            <td>{{ row.company_name }}</td>
+            <td>{{ row.attended }}</td>
+            <td>{{ row.absent }}</td>
+        </tr>
+    {% else %}
+        <tr><td colspan="3">No data yet.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<h2>Students with Pending Follow-Ups</h2>
+<table>
+    <thead><tr><th>Name</th><th>Email</th><th>Pending Tasks</th></tr></thead>
+    <tbody>
+    {% for row in pending_followups %}
+        <tr>
+            <td>{{ row.full_name }}</td>
+            <td>{{ row.email }}</td>
+            <td>{{ row.pending_count }}</td>
+        </tr>
+    {% else %}
+        <tr><td colspan="3">No pending tasks.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<h2>Event Fill Rates</h2>
+<table>
+    <thead><tr><th>Event</th><th>Capacity</th><th>Confirmed</th><th>Fill %</th></tr></thead>
+    <tbody>
+    {% for row in fill_rates %}
+        <tr>
+            <td>{{ row.title }}</td>
+            <td>{{ row.capacity }}</td>
+            <td>{{ row.confirmed }}</td>
+            <td class="{{ 'full' if row.fill_pct >= 100 else '' }}">{{ row.fill_pct }}%</td>
+        </tr>
+    {% else %}
+        <tr><td colspan="4">No events yet.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<h2>No-Shows (RSVPed but Did Not Attend)</h2>
+<table>
+    <thead><tr><th>Student</th><th>Email</th><th>Event</th></tr></thead>
+    <tbody>
+    {% for row in no_shows %}
+        <tr>
+            <td>{{ row.full_name }}</td>
+            <td>{{ row.email }}</td>
+            <td>{{ row.event_title }}</td>
+        </tr>
+    {% else %}
+        <tr><td colspan="3">No no-shows recorded.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ 'Edit Organizer' if organizer else 'New Organizer' }}</h1>
+<form method="POST">
+    <label>Full Name<br>
+        <input name="full_name" value="{{ organizer.full_name if organizer else '' }}" required>
+    </label>
+    <label>Email<br>
+        <input type="email" name="email" value="{{ organizer.email if organizer else '' }}" required>
+    </label>
+    <label>Role<br>
+        <input name="role" value="{{ organizer.role if organizer else '' }}">
+    </label>
+    <button type="submit" class="btn">{{ 'Update' if organizer else 'Add Organizer' }}</button>
+    <a href="{{ url_for('organizers') }}">Cancel</a>
+</form>
+{% endblock %}
