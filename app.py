@@ -138,6 +138,45 @@ def new_student():
         return redirect(url_for('students'))
     return render_template('students/form.html', student=None)
 
+@app.route('/students/<int:student_id>')
+def student_detail(student_id):
+    student = query("SELECT * FROM STUDENT WHERE student_id = %s", (student_id,), fetchone=True)
+
+    # All events this student has RSVPed for, joined with event and company info
+    rsvps = query("""
+        SELECT e.title, e.event_date, e.event_type, c.name AS company_name,
+               r.rsvp_status, r.created_at
+        FROM RSVP r
+        JOIN EVENT e ON r.event_id = e.event_id
+        LEFT JOIN COMPANY c ON e.company_id = c.company_id
+        WHERE r.student_id = %s
+        ORDER BY e.event_date DESC
+    """, (student_id,), fetchall=True)
+
+    # Attendance history for this student
+    attendance = query("""
+        SELECT e.title, e.event_date, a.attended_flag, a.checkin_time
+        FROM ATTENDANCE a
+        JOIN EVENT e ON a.event_id = e.event_id
+        WHERE a.student_id = %s
+        ORDER BY e.event_date DESC
+    """, (student_id,), fetchall=True)
+
+    # All follow-ups for this student across all events
+    followups = query("""
+        SELECT f.followup_type, f.status, f.notes, f.created_at, e.title AS event_title
+        FROM FOLLOW_UP f
+        JOIN EVENT e ON f.event_id = e.event_id
+        WHERE f.student_id = %s
+        ORDER BY f.created_at DESC
+    """, (student_id,), fetchall=True)
+
+    return render_template('students/detail.html',
+                           student=student,
+                           rsvps=rsvps,
+                           attendance=attendance,
+                           followups=followups)
+
 @app.route('/students/<int:student_id>/edit', methods=['GET', 'POST'])
 def edit_student(student_id):
     if request.method == 'POST':

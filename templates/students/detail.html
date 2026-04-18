@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ student.full_name }}</h1>
+<p>
+    <strong>Email:</strong> {{ student.email }} &nbsp;|&nbsp;
+    <strong>Major:</strong> {{ student.major or '—' }} &nbsp;|&nbsp;
+    <strong>Graduation Year:</strong> {{ student.graduation_year or '—' }}
+</p>
+<div style="margin: 1rem 0;">
+    <a class="btn" href="{{ url_for('edit_student', student_id=student.student_id) }}">Edit</a>
+    <a href="{{ url_for('students') }}">Back to Students</a>
+</div>
+
+<hr>
+
+<h2>RSVP History</h2>
+{% if rsvps %}
+<table>
+    <thead>
+        <tr><th>Event</th><th>Company</th><th>Type</th><th>Date</th><th>Status</th><th>RSVPed At</th></tr>
+    </thead>
+    <tbody>
+    {% for r in rsvps %}
+        <tr>
+            <td>{{ r.title }}</td>
+            <td>{{ r.company_name or '—' }}</td>
+            <td>{{ r.event_type }}</td>
+            <td>{{ r.event_date }}</td>
+            <td>{{ r.rsvp_status }}</td>
+            <td>{{ r.created_at.strftime('%Y-%m-%d') }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No RSVPs yet.</p>
+{% endif %}
+
+<h2>Attendance Record</h2>
+{% if attendance %}
+<table>
+    <thead>
+        <tr><th>Event</th><th>Date</th><th>Attended</th><th>Check-In Time</th></tr>
+    </thead>
+    <tbody>
+    {% for a in attendance %}
+        <tr>
+            <td>{{ a.title }}</td>
+            <td>{{ a.event_date }}</td>
+            <td>{{ 'Yes' if a.attended_flag else 'No' }}</td>
+            <td>{{ a.checkin_time.strftime('%Y-%m-%d %H:%M') if a.checkin_time else '—' }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No attendance records yet.</p>
+{% endif %}
+
+<h2>Follow-Up Tasks</h2>
+{% if followups %}
+<table>
+    <thead>
+        <tr><th>Event</th><th>Type</th><th>Status</th><th>Notes</th><th>Date</th></tr>
+    </thead>
+    <tbody>
+    {% for f in followups %}
+        <tr>
+            <td>{{ f.event_title }}</td>
+            <td>{{ f.followup_type }}</td>
+            <td>{{ f.status }}</td>
+            <td>{{ f.notes or '—' }}</td>
+            <td>{{ f.created_at.strftime('%Y-%m-%d') }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No follow-up tasks yet.</p>
+{% endif %}
+
+{% endblock %}
