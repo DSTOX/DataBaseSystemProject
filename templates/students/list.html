@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Students</h1>
+
+<form method="GET" action="{{ url_for('students') }}" style="margin-bottom:1rem; display:flex; gap:0.5rem;">
+    <input name="search" placeholder="Search by name or major" value="{{ search }}" style="max-width:300px">
+    <button type="submit" class="btn">Search</button>
+    <a class="btn" href="{{ url_for('students') }}">Clear</a>
+</form>
+
 <a class="btn" href="{{ url_for('new_student') }}">+ New Student</a>
 <table>
     <thead><tr><th>Name</th><th>Email</th><th>Major</th><th>Grad Year</th><th>Actions</th></tr></thead>

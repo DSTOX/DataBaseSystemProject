@@ -3,6 +3,7 @@
 <h1>Reports</h1>
 
 <h2>Attendance by Company</h2>
+<p style="color:#555; font-size:0.85rem;">Aggregate query — joins COMPANY, EVENT, and ATTENDANCE; uses GROUP BY with conditional COUNT</p>
 <table>
     <thead><tr><th>Company</th><th>Attended</th><th>Absent</th></tr></thead>
     <tbody>
@@ -18,23 +19,8 @@
     </tbody>
 </table>
 
-<h2>Students with Pending Follow-Ups</h2>
-<table>
-    <thead><tr><th>Name</th><th>Email</th><th>Pending Tasks</th></tr></thead>
-    <tbody>
-    {% for row in pending_followups %}
-        <tr>
-            <td>{{ row.full_name }}</td>
-            <td>{{ row.email }}</td>
-            <td>{{ row.pending_count }}</td>
-        </tr>
-    {% else %}
-        <tr><td colspan="3">No pending tasks.</td></tr>
-    {% endfor %}
-    </tbody>
-</table>
-
 <h2>Event Fill Rates</h2>
+<p style="color:#555; font-size:0.85rem;">Aggregate query — joins EVENT and RSVP; uses COUNT and ROUND with GROUP BY to compute fill percentage per event</p>
 <table>
     <thead><tr><th>Event</th><th>Capacity</th><th>Confirmed</th><th>Fill %</th></tr></thead>
     <tbody>
@@ -52,6 +38,7 @@
 </table>
 
 <h2>No-Shows (RSVPed but Did Not Attend)</h2>
+<p style="color:#555; font-size:0.85rem;">Multi-table JOIN query — joins RSVP, STUDENT, EVENT, and ATTENDANCE across four tables using LEFT JOIN to find students who never checked in</p>
 <table>
     <thead><tr><th>Student</th><th>Email</th><th>Event</th></tr></thead>
     <tbody>
@@ -63,6 +50,23 @@
         </tr>
     {% else %}
         <tr><td colspan="3">No no-shows recorded.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<h2>Students with Pending Follow-Ups</h2>
+<p style="color:#555; font-size:0.85rem;">Aggregate query — joins STUDENT and FOLLOW_UP; uses COUNT with GROUP BY to find students with outstanding tasks</p>
+<table>
+    <thead><tr><th>Name</th><th>Email</th><th>Pending Tasks</th></tr></thead>
+    <tbody>
+    {% for row in pending_followups %}
+        <tr>
+            <td>{{ row.full_name }}</td>
+            <td>{{ row.email }}</td>
+            <td>{{ row.pending_count }}</td>
+        </tr>
+    {% else %}
+        <tr><td colspan="3">No pending tasks.</td></tr>
     {% endfor %}
     </tbody>
 </table>

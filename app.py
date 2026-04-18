@@ -119,8 +119,14 @@ def delete_organizer(organizer_id):
 
 @app.route('/students')
 def students():
-    all_students = query("SELECT * FROM STUDENT ORDER BY full_name", fetchall=True)
-    return render_template('students/list.html', students=all_students)
+    search = request.args.get('search', '').strip()
+    if search:
+        all_students = query(
+            "SELECT * FROM STUDENT WHERE full_name ILIKE %s OR major ILIKE %s ORDER BY full_name",
+            ('%' + search + '%', '%' + search + '%'), fetchall=True)
+    else:
+        all_students = query("SELECT * FROM STUDENT ORDER BY full_name", fetchall=True)
+    return render_template('students/list.html', students=all_students, search=search)
 
 @app.route('/students/new', methods=['GET', 'POST'])
 def new_student():
