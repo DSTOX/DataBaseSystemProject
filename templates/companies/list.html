@@ -6,17 +6,17 @@
     <thead><tr><th>Name</th><th>Industry</th><th>Website</th><th>Actions</th></tr></thead>
     <tbody>
     {% for c in companies %}
-        <tr>
-            <td>{{ c.name }}</td>
-            <td>{{ c.industry }}</td>
-            <td>{{ c.website }}</td>
-            <td>
-                <a href="{{ url_for('edit_company', company_id=c.company_id) }}">Edit</a>
-                <form method="POST" action="{{ url_for('delete_company', company_id=c.company_id) }}" style="display:inline">
-                    <button type="submit" onclick="return confirm('Delete company?')">Delete</button>
-                </form>
-            </td>
-        </tr>
+    <tr>
+        <td>{{ c.name }}</td>
+        <td>{{ c.industry }}</td>
+        <td>{{ c.website }}</td>
+        <td>
+            <a href="{{ url_for('edit_company', company_id=c.company_id) }}">Edit</a> |
+            <form method="POST" action="{{ url_for('delete_company', company_id=c.company_id) }}" style="display:inline">
+                <button type="submit" onclick="return confirm('Delete company?')">Delete</button>
+            </form>
+        </td>
+    </tr>
     {% endfor %}
     </tbody>
 </table>

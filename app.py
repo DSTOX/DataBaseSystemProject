@@ -9,19 +9,15 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'campus_recruiting_secret')
 
-# Database connection info
 DB_NAME = os.getenv('DB_NAME', 'campus_recruiting')
 DB_USER = os.getenv('DB_USER', 'postgres')
 DB_PASS = os.getenv('DB_PASS', '')
 DB_HOST = os.getenv('DB_HOST', 'localhost')
 
-def get_db():
+# helper to run queries without repeating connection logic every time
+def query(sql, params=(), fetchone=False, fetchall=False, commit=False):
     conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER, password=DB_PASS, host=DB_HOST)
     conn.autocommit = False
-    return conn
-
-def query(sql, params=(), fetchone=False, fetchall=False, commit=False):
-    conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute(sql, params)
     result = None
@@ -36,12 +32,11 @@ def query(sql, params=(), fetchone=False, fetchall=False, commit=False):
     return result
 
 
-# Home page
 @app.route('/')
 def index():
-    event_count    = query("SELECT COUNT(*) FROM EVENT", fetchone=True)[0]
-    student_count  = query("SELECT COUNT(*) FROM STUDENT", fetchone=True)[0]
-    rsvp_count     = query("SELECT COUNT(*) FROM RSVP WHERE rsvp_status = 'confirmed'", fetchone=True)[0]
+    event_count = query("SELECT COUNT(*) FROM EVENT", fetchone=True)[0]
+    student_count = query("SELECT COUNT(*) FROM STUDENT", fetchone=True)[0]
+    rsvp_count = query("SELECT COUNT(*) FROM RSVP WHERE rsvp_status = 'confirmed'", fetchone=True)[0]
     waitlist_count = query("SELECT COUNT(*) FROM WAITLIST", fetchone=True)[0]
     return render_template('index.html',
                            event_count=event_count,
@@ -50,7 +45,7 @@ def index():
                            waitlist_count=waitlist_count)
 
 
-# ---- COMPANIES ----
+# --- companies ---
 
 @app.route('/companies')
 def companies():
@@ -85,7 +80,7 @@ def delete_company(company_id):
     return redirect(url_for('companies'))
 
 
-# ---- ORGANIZERS ----
+# --- organizers ---
 
 @app.route('/organizers')
 def organizers():
@@ -120,7 +115,7 @@ def delete_organizer(organizer_id):
     return redirect(url_for('organizers'))
 
 
-# ---- STUDENTS ----
+# --- students ---
 
 @app.route('/students')
 def students():
@@ -142,7 +137,7 @@ def new_student():
 def student_detail(student_id):
     student = query("SELECT * FROM STUDENT WHERE student_id = %s", (student_id,), fetchone=True)
 
-    # All events this student has RSVPed for, joined with event and company info
+    # get all events this student RSVPed for
     rsvps = query("""
         SELECT e.title, e.event_date, e.event_type, c.name AS company_name,
                r.rsvp_status, r.created_at
@@ -153,7 +148,6 @@ def student_detail(student_id):
         ORDER BY e.event_date DESC
     """, (student_id,), fetchall=True)
 
-    # Attendance history for this student
     attendance = query("""
         SELECT e.title, e.event_date, a.attended_flag, a.checkin_time
         FROM ATTENDANCE a
@@ -162,7 +156,6 @@ def student_detail(student_id):
         ORDER BY e.event_date DESC
     """, (student_id,), fetchall=True)
 
-    # All follow-ups for this student across all events
     followups = query("""
         SELECT f.followup_type, f.status, f.notes, f.created_at, e.title AS event_title
         FROM FOLLOW_UP f
@@ -196,7 +189,7 @@ def delete_student(student_id):
     return redirect(url_for('students'))
 
 
-# ---- EVENTS ----
+# --- events ---
 
 @app.route('/events')
 def events():
@@ -251,7 +244,6 @@ def event_detail(event_id):
         ORDER BY w.waitlist_position
     """, (event_id,), fetchall=True)
 
-    # Aggregate query: count attended vs absent
     attendance_summary = query("""
         SELECT
             COUNT(CASE WHEN attended_flag = TRUE THEN 1 END) AS attended,
@@ -281,7 +273,7 @@ def event_detail(event_id):
 @app.route('/events/new', methods=['GET', 'POST'])
 def new_event():
     if request.method == 'POST':
-        company_id   = request.form['company_id'] or None
+        company_id = request.form['company_id'] or None
         organizer_id = request.form['organizer_id'] or None
         query("""INSERT INTO EVENT (title, event_type, event_date, location, capacity, description, company_id, organizer_id)
                  VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
@@ -291,14 +283,14 @@ def new_event():
               commit=True)
         flash('Event created.')
         return redirect(url_for('events'))
-    all_companies  = query("SELECT * FROM COMPANY ORDER BY name", fetchall=True)
+    all_companies = query("SELECT * FROM COMPANY ORDER BY name", fetchall=True)
     all_organizers = query("SELECT * FROM ORGANIZER ORDER BY full_name", fetchall=True)
     return render_template('events/form.html', event=None, companies=all_companies, organizers=all_organizers)
 
 @app.route('/events/<int:event_id>/edit', methods=['GET', 'POST'])
 def edit_event(event_id):
     if request.method == 'POST':
-        company_id   = request.form['company_id'] or None
+        company_id = request.form['company_id'] or None
         organizer_id = request.form['organizer_id'] or None
         query("""UPDATE EVENT SET title=%s, event_type=%s, event_date=%s, location=%s,
                                   capacity=%s, description=%s, company_id=%s, organizer_id=%s
@@ -309,8 +301,8 @@ def edit_event(event_id):
               commit=True)
         flash('Event updated.')
         return redirect(url_for('events'))
-    event          = query("SELECT * FROM EVENT WHERE event_id = %s", (event_id,), fetchone=True)
-    all_companies  = query("SELECT * FROM COMPANY ORDER BY name", fetchall=True)
+    event = query("SELECT * FROM EVENT WHERE event_id = %s", (event_id,), fetchone=True)
+    all_companies = query("SELECT * FROM COMPANY ORDER BY name", fetchall=True)
     all_organizers = query("SELECT * FROM ORGANIZER ORDER BY full_name", fetchall=True)
     return render_template('events/form.html', event=event, companies=all_companies, organizers=all_organizers)
 
@@ -321,13 +313,13 @@ def delete_event(event_id):
     return redirect(url_for('events'))
 
 
-# ---- RSVP (Advanced Feature: Capacity Check + Waitlist) ----
+# --- rsvp + waitlist (advanced feature) ---
 
 @app.route('/events/<int:event_id>/rsvp', methods=['POST'])
 def rsvp(event_id):
     student_id = int(request.form['student_id'])
 
-    # Check if already RSVPed or waitlisted
+    # check if they already signed up or are on the waitlist
     existing = query("SELECT rsvp_status FROM RSVP WHERE student_id=%s AND event_id=%s",
                      (student_id, event_id), fetchone=True)
     on_waitlist = query("SELECT 1 FROM WAITLIST WHERE student_id=%s AND event_id=%s",
@@ -338,7 +330,6 @@ def rsvp(event_id):
     elif on_waitlist:
         flash('This student is already on the waitlist.')
     else:
-        # Count confirmed RSVPs and compare to capacity
         event = query("SELECT capacity FROM EVENT WHERE event_id = %s", (event_id,), fetchone=True)
         confirmed = query("SELECT COUNT(*) FROM RSVP WHERE event_id=%s AND rsvp_status='confirmed'",
                           (event_id,), fetchone=True)[0]
@@ -348,7 +339,7 @@ def rsvp(event_id):
                   (student_id, event_id), commit=True)
             flash('RSVP confirmed!')
         else:
-            # Event is full, add to waitlist
+            # event is full so put them on the waitlist
             next_pos = query("SELECT COALESCE(MAX(waitlist_position), 0) + 1 FROM WAITLIST WHERE event_id=%s",
                              (event_id,), fetchone=True)[0]
             query("INSERT INTO WAITLIST (student_id, event_id, waitlist_position) VALUES (%s, %s, %s)",
@@ -360,21 +351,22 @@ def rsvp(event_id):
 
 @app.route('/events/<int:event_id>/cancel/<int:student_id>', methods=['POST'])
 def cancel_rsvp(event_id, student_id):
-    # Deleting the RSVP triggers the PostgreSQL trigger that auto-promotes the next waitlisted student
+    # deleting from RSVP fires the postgres trigger which promotes the next waitlisted student automatically
     query("DELETE FROM RSVP WHERE student_id=%s AND event_id=%s AND rsvp_status='confirmed'",
           (student_id, event_id), commit=True)
     flash('RSVP cancelled. The next student on the waitlist has been automatically promoted.')
     return redirect(url_for('event_detail', event_id=event_id))
 
 
-# ---- ATTENDANCE ----
+# --- attendance ---
 
 @app.route('/events/<int:event_id>/attendance', methods=['POST'])
 def mark_attendance(event_id):
-    student_id    = int(request.form['student_id'])
+    student_id = int(request.form['student_id'])
     attended_flag = request.form.get('attended_flag') == 'on'
-    checkin_time  = request.form.get('checkin_time') or None
+    checkin_time = request.form.get('checkin_time') or None
 
+    # upsert so you can update attendance if you made a mistake
     query("""
         INSERT INTO ATTENDANCE (student_id, event_id, attended_flag, checkin_time)
         VALUES (%s, %s, %s, %s)
@@ -385,7 +377,7 @@ def mark_attendance(event_id):
     return redirect(url_for('event_detail', event_id=event_id))
 
 
-# ---- FOLLOW-UPS ----
+# --- follow-ups ---
 
 @app.route('/followups')
 def followups():
@@ -423,11 +415,11 @@ def delete_followup(followup_id):
     return redirect(url_for('followups'))
 
 
-# ---- REPORTS ----
+# --- reports ---
 
 @app.route('/reports')
 def reports():
-    # Attendance count grouped by company (aggregate + multi-table join)
+    # how many students attended vs were absent per company
     attendance_by_company = query("""
         SELECT c.name AS company_name,
                COUNT(CASE WHEN a.attended_flag = TRUE THEN 1 END) AS attended,
@@ -439,7 +431,6 @@ def reports():
         ORDER BY attended DESC
     """, fetchall=True)
 
-    # Students who still have pending follow-up tasks
     pending_followups = query("""
         SELECT s.full_name, s.email, COUNT(f.followup_id) AS pending_count
         FROM STUDENT s
@@ -449,7 +440,7 @@ def reports():
         ORDER BY pending_count DESC
     """, fetchall=True)
 
-    # How full each event is
+    # shows fill % for each event
     fill_rates = query("""
         SELECT e.title, e.capacity,
                COUNT(CASE WHEN r.rsvp_status = 'confirmed' THEN 1 END) AS confirmed,
@@ -460,7 +451,7 @@ def reports():
         ORDER BY fill_pct DESC
     """, fetchall=True)
 
-    # Students who RSVPed but did not attend (join across 3 tables)
+    # students who RSVPed but never showed up
     no_shows = query("""
         SELECT s.full_name, s.email, e.title AS event_title
         FROM RSVP r

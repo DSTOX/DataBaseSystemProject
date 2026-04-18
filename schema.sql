@@ -81,16 +81,8 @@ CREATE TABLE FOLLOW_UP (
     created_at    TIMESTAMP DEFAULT NOW()
 );
 
--- =============================================================
--- ADVANCED FEATURE: Automatic Waitlist Seat Promotion
---
--- When a confirmed RSVP is deleted (cancellation), this trigger
--- fires and automatically promotes the first student on the
--- waitlist (lowest waitlist_position) to a confirmed RSVP.
--- The promoted student is removed from WAITLIST and all
--- remaining positions are decremented by 1.
--- All steps run in a single transaction for data integrity.
--- =============================================================
+-- trigger: when someone cancels their RSVP, automatically promote
+-- the first person on the waitlist into a confirmed spot
 
 CREATE OR REPLACE FUNCTION promote_from_waitlist()
 RETURNS TRIGGER AS $$
